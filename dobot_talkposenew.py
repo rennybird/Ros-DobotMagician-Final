@@ -7,24 +7,29 @@ import pydobot
 available_ports = list_ports.comports()
 port = available_ports[0].device
 device = pydobot.Dobot(port=port, verbose=True)
-def talker():
-	pub = rospy.Publisher('chatter', String, queue_size=10)
-	rospy.init_node('talker', anonymous=True)
-	rate = rospy.Rate(10) # 10hz
-	while not rospy.is_shutdown():
-		pose = pydobot.Dobot(port=port, verbose=True)
-		x = pose.x
-		y = pose.y
-		z = pose.z
-		pos_str = f"DobotPos: x={x}, y={y}, z={z}"  
-		hello_str = pos_str
-		rospy.loginfo(hello_str)
-		pub.publish(hello_str)
-		print(type(hello_str))
-		rate.sleep()
 
-if __name__ == '__main__':
-    try:
-        talker()
-    except rospy.ROSInterruptException:
-        pass
+def publish_position():
+    # initialize node
+    rospy.init_node('dobot_position_publisher', anonymous=True)
+
+    # initialize publisher
+    pub = rospy.Publisher('dobot_position', String, queue_size=10)
+
+    # set publishing rate
+    rate = rospy.Rate(5) # 5 Hz
+
+    while not rospy.is_shutdown():
+        # get dobot position
+        pose = dobot._get_pose()
+        x = pose[0]
+        y = pose[1]
+        z = pose[2]
+
+        # create message string
+        msg_str = "Dobot position: x={}, y={}, z={}".format(x, y, z)
+
+        # publish message
+        pub.publish(msg_str)
+
+        # sleep for remainder of the publishing rate period
+        rate.sleep()
